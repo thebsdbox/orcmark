@@ -1,0 +1,6 @@
+#Start from Scratch
+FROM scratch
+#Copy binary
+COPY orcmark orcmark
+#Run binary
+CMD ["./orcmark"]
