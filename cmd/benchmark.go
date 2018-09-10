@@ -46,8 +46,17 @@ var benchmarkCMD = &cobra.Command{
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
-		log.Infof("Creating [%d] replicas of image [%s]", spec.Replicas, spec.Image)
-
+		log.Infof("Creating [%d] replicas of image [%s] through orchestrator [%s]", spec.Replicas, spec.Image, spec.Orchestrator)
+		switch spec.Orchestrator {
+		case "swarm":
+			err = spec.InvokeDockerClient()
+			if err != nil {
+				log.Fatalf("%v", err)
+			}
+		case "kubernetes":
+		default:
+			log.Fatalf("Unknown orchestrator [%s]", spec.Orchestrator)
+		}
 	},
 }
 
