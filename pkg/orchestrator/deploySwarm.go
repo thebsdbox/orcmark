@@ -25,7 +25,7 @@ func (s *Service) InvokeSwarm() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Service Created with ID [%s]", svc.ID)
+	log.Infof("Service Created with ID [%s]", svc.ID)
 	return nil
 }
 

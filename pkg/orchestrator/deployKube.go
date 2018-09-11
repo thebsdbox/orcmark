@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	log "github.com/Sirupsen/logrus"
+
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,7 +44,7 @@ func (s *Service) InvokeKubernetes() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
+	log.Infof("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
 	return nil
 }
