@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -11,6 +12,15 @@ import (
 
 // Captures a container being up
 func upPost(w http.ResponseWriter, r *http.Request) {
-	log.Printf("UP Message from %s after %v", r.RemoteAddr, time.Since(stopwatch))
+	counter++
+	postTime := time.Since(stopwatch)
+	log.Printf("UP Message [%d] from %s after %s", counter, r.RemoteAddr, postTime.String())
+	// Only append the results time if were logging to a file
+	if resultsFile != "" {
+		results = append(results, strconv.FormatInt(postTime.Nanoseconds(), 10))
+	}
+	if len(results) == expectedResults {
+		writeResults()
+	}
 	io.WriteString(w, "")
 }

@@ -49,6 +49,7 @@ func (s *Service) InvokeKubernetes() error {
 	return nil
 }
 
+// setKubeSpec will build a configuration for the deployment on kubernetes
 func (s *Service) setKubeSpec() *appsv1.Deployment {
 	replicas := int32(s.Replicas)
 	deployment := &appsv1.Deployment{
@@ -71,8 +72,9 @@ func (s *Service) setKubeSpec() *appsv1.Deployment {
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  "benchmark",
-							Image: s.Image,
+							Name:    "benchmark",
+							Image:   s.Image,
+							Command: s.CMD,
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "http",
