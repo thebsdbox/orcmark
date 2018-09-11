@@ -49,9 +49,9 @@ func ExampleOutput(j, y bool) []byte {
 	exampleSpec.Replicas = 10
 	exampleSpec.CMD = append(exampleSpec.CMD, "sleep 100")
 
-	// Create JSON output
+	// Create JSON output (pretty-print)
 	if j == true {
-		b, _ := json.Marshal(exampleSpec)
+		b, _ := json.MarshalIndent(exampleSpec, "", "\t")
 		return b
 	}
 

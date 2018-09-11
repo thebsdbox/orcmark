@@ -11,8 +11,8 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// InvokeDockerClient - w
-func (s *Service) InvokeDockerClient() error {
+// InvokeSwarm - w
+func (s *Service) InvokeSwarm() error {
 	c, err := client.NewClientWithOpts(client.WithVersion("1.38"))
 	if err != nil {
 		return err
