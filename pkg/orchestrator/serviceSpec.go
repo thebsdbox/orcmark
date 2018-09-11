@@ -16,9 +16,9 @@ type Service struct {
 	// Container image to run
 	Image string `json:"image" yaml:"image"`
 	// Number of containers to start
-	Replicas int `json:"replicas" yaml:"replicas"`
+	Replicas uint64 `json:"replicas" yaml:"replicas"`
 	// Command to run inside the container
-	CMD string `json:"cmd" yaml:"cmd"`
+	CMD []string `json:"cmd" yaml:"cmd"`
 }
 
 // ParseBenchmarkSpec will parse the spec and begin the benchmark
@@ -47,7 +47,7 @@ func ExampleOutput(j, y bool) []byte {
 	exampleSpec.Orchestrator = "swarm"
 	exampleSpec.Image = "nginx:latest"
 	exampleSpec.Replicas = 10
-	exampleSpec.CMD = "sleep 100"
+	exampleSpec.CMD = append(exampleSpec.CMD, "sleep 100")
 
 	// Create JSON output
 	if j == true {
