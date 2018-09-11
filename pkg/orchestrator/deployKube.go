@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -33,14 +35,56 @@ func (s *Service) InvokeKubernetes() error {
 	if err != nil {
 		return err
 	}
-	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+
+	deploymentsClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
+	deployment := s.setKubeSpec()
+	result, err := deploymentsClient.Create(deployment)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
 	return nil
+}
 
+func (s *Service) setKubeSpec() *appsv1.Deployment {
+	replicas := int32(s.Replicas)
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "orcmark-deployment",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "benchmark",
+				},
+			},
+			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "benchmark",
+					},
+				},
+				Spec: apiv1.PodSpec{
+					Containers: []apiv1.Container{
+						{
+							Name:  "benchmark",
+							Image: s.Image,
+							Ports: []apiv1.ContainerPort{
+								{
+									Name:          "http",
+									Protocol:      apiv1.ProtocolTCP,
+									ContainerPort: 80,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	return deployment
 }
 
 func homeDir() string {
