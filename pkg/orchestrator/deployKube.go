@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -17,7 +18,7 @@ import (
 )
 
 //InvokeKubernetes - this requires a working kubectl
-func (s *Service) InvokeKubernetes() error {
+func (s *Service) InvokeKubernetes(autoReap bool) error {
 	// use the current context in kubeconfig
 	var kubeConfigPath string
 	//TODO - Allow a configurable path to a kubeconfig
@@ -46,6 +47,39 @@ func (s *Service) InvokeKubernetes() error {
 	}
 	log.Infof("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
+	// If we're not auto reaping then return once the deployment has been set
+	if autoReap == false {
+		return nil
+	}
+
+	log.Infoln("Will reap the deployment (after 10 seconds) after all replicas are deployed")
+
+	// Wait a minimum of ten seconds before beginning the auto reap
+	time.Sleep(10 * time.Second)
+
+	// Retrieve the orcmark deployment
+	orcmarkDeployment, err := deploymentsClient.Get("orcmark-deployment", metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Loop over the deployment and watch the replicas until we're at the expected amount
+	for orcmarkDeployment.Status.ReadyReplicas != int32(s.Replicas) {
+		log.Debugf("Currently [%d] replicas", orcmarkDeployment.Status.Replicas)
+		time.Sleep(1 * time.Second)
+		// Update the deployment status
+		orcmarkDeployment, err = deploymentsClient.Get("orcmark-deployment", metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	deletePolicy := metav1.DeletePropagationForeground
+	if err := deploymentsClient.Delete("orcmark-deployment", &metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	}); err != nil {
+		return err
+	}
+	log.Infof("Succesfully removed the orcmark deployment from Kubernetes")
 	return nil
 }
 

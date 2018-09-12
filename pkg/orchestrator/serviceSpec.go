@@ -45,9 +45,11 @@ func ParseBenchmarkSpec(spec []byte) (*Service, error) {
 func ExampleOutput(j, y bool) []byte {
 	var exampleSpec Service
 	exampleSpec.Orchestrator = "swarm"
-	exampleSpec.Image = "nginx:latest"
+	exampleSpec.Image = "thebsdbox/amiup:1.0"
 	exampleSpec.Replicas = 10
-	exampleSpec.CMD = append(exampleSpec.CMD, "sleep 100")
+	exampleSpec.CMD = append(exampleSpec.CMD, "/amiup")
+	exampleSpec.CMD = append(exampleSpec.CMD, "-server")
+	exampleSpec.CMD = append(exampleSpec.CMD, "http://10.0.0.1")
 
 	// Create JSON output (pretty-print)
 	if j == true {

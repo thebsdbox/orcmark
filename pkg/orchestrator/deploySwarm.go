@@ -4,6 +4,7 @@ package orchestrator
 
 import (
 	"context"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/api/types"
@@ -12,7 +13,7 @@ import (
 )
 
 // InvokeSwarm - w
-func (s *Service) InvokeSwarm() error {
+func (s *Service) InvokeSwarm(autoReap bool) error {
 	c, err := client.NewClientWithOpts(client.WithVersion("1.38"))
 	if err != nil {
 		return err
@@ -26,7 +27,51 @@ func (s *Service) InvokeSwarm() error {
 		return err
 	}
 	log.Infof("Service Created with ID [%s]", svc.ID)
+	// If we're not auto reaping then return once the deployment has been set
+	if autoReap == false {
+		return nil
+	}
+
+	log.Infoln("Will reap the deployment (after 10 seconds) after all replicas are deployed")
+
+	// Wait a minimum of ten seconds before beginning the auto reap
+	time.Sleep(1 * time.Second)
+	orcMarkTasks, err := c.TaskList(context.Background(), types.TaskListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for s.tasksDeployed(svc.ID, orcMarkTasks) != true {
+		time.Sleep(1 * time.Second)
+		orcMarkTasks, err = c.TaskList(context.Background(), types.TaskListOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	err = c.ServiceRemove(context.Background(), svc.ID)
+	if err != nil {
+		return err
+	}
+	log.Infof("Succesfully removed service [%s]", svc.ID)
 	return nil
+}
+
+// tasksDeployed will look at all of the tasks in the swarm and identify if the correct amount of replicas are present
+func (s *Service) tasksDeployed(serviceID string, tasks []swarm.Task) bool {
+	var replicaCount uint64
+	for taskID := range tasks {
+		if tasks[taskID].ServiceID == serviceID {
+			if tasks[taskID].Status.State == swarm.TaskStateRunning {
+				replicaCount++
+			}
+		}
+	}
+	log.Debugf("Currently [%d] replicas", replicaCount)
+
+	if replicaCount == s.Replicas {
+		return true
+	}
+	return false
 }
 
 func (s *Service) setSwarmSpec() swarm.ServiceSpec {

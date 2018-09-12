@@ -17,7 +17,8 @@ func upPost(w http.ResponseWriter, r *http.Request) {
 	log.Printf("UP Message [%d] from %s after %s", counter, r.RemoteAddr, postTime.String())
 	// Only append the results time if were logging to a file
 	if resultsFile != "" {
-		results = append(results, strconv.FormatInt(postTime.Nanoseconds(), 10))
+		// Convert result from nanoseconds to milliseconds, then convert to a string
+		results = append(results, strconv.FormatInt((postTime.Nanoseconds()/1000000), 10))
 	}
 	if len(results) == expectedResults {
 		writeResults()

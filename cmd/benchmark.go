@@ -14,8 +14,12 @@ var jsonflag, yamlflag bool
 // This string is the path to a benchmark spec
 var filepath string
 
+// Automatically reap the deployments once succesfully deployed
+var autoReap bool
+
 func init() {
 	benchmarkCMD.Flags().StringVar(&filepath, "path", "", "The path to a benchmark spec")
+	benchmarkCMD.Flags().BoolVar(&autoReap, "reap", false, "Automatically reap the service once succesfully deployed")
 
 	benchmarkExampleCMD.Flags().BoolVar(&jsonflag, "json", false, "Create JSON output")
 	benchmarkExampleCMD.Flags().BoolVar(&yamlflag, "yaml", false, "Create YAML output")
@@ -49,12 +53,12 @@ var benchmarkCMD = &cobra.Command{
 		log.Infof("Creating [%d] replicas of image [%s] through orchestrator [%s]", spec.Replicas, spec.Image, spec.Orchestrator)
 		switch spec.Orchestrator {
 		case "swarm":
-			err = spec.InvokeSwarm()
+			err = spec.InvokeSwarm(autoReap)
 			if err != nil {
 				log.Fatalf("%v", err)
 			}
 		case "kubernetes":
-			err = spec.InvokeKubernetes()
+			err = spec.InvokeKubernetes(autoReap)
 			if err != nil {
 				log.Fatalf("%v", err)
 			}
