@@ -65,7 +65,7 @@ func (s *Service) InvokeKubernetes(autoReap bool) error {
 
 	// Loop over the deployment and watch the replicas until we're at the expected amount
 	for orcmarkDeployment.Status.ReadyReplicas != int32(s.Replicas) {
-		log.Debugf("Currently [%d] replicas", orcmarkDeployment.Status.Replicas)
+		log.Debugf("Currently [%d] running replicas", orcmarkDeployment.Status.ReadyReplicas)
 		time.Sleep(1 * time.Second)
 		// Update the deployment status
 		orcmarkDeployment, err = deploymentsClient.Get("orcmark-deployment", metav1.GetOptions{})

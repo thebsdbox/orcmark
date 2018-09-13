@@ -32,10 +32,10 @@ func (s *Service) InvokeSwarm(autoReap bool) error {
 		return nil
 	}
 
-	log.Infoln("Will reap the deployment (after 10 seconds) after all replicas are deployed")
+	log.Infoln("Will reap the deployment (after 10 seconds) once all replicas are running")
 
 	// Wait a minimum of ten seconds before beginning the auto reap
-	time.Sleep(1 * time.Second)
+	time.Sleep(10 * time.Second)
 	orcMarkTasks, err := c.TaskList(context.Background(), types.TaskListOptions{})
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (s *Service) tasksDeployed(serviceID string, tasks []swarm.Task) bool {
 			}
 		}
 	}
-	log.Debugf("Currently [%d] replicas", replicaCount)
+	log.Debugf("Currently [%d] running replicas", replicaCount)
 
 	if replicaCount == s.Replicas {
 		return true
